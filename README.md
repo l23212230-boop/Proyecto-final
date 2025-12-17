@@ -26,8 +26,11 @@ Notas y extensiones recomendadas
 # Proyecto-final
 # Proyecto-final
 # Proyecto-final
+<<<<<<< HEAD
 # Proyecto-final
 # Proyecto-final
 # Proyecto-final
 # Proyecto-final
 # Proyecto-final
+=======
+>>>>>>> parent of 27514d7 (first commit)
