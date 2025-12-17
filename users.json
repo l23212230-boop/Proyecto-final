@@ -1,0 +1,110 @@
+[
+  {
+    "username": "admin",
+    "password": "$2a$10$LH9yhYVwFJAKW9JXH85hbOqnodGIWSnq2skDrXhRiTa6d6aJX3m8a",
+    "role": "admin",
+    "email": "admin@example.com"
+  },
+  {
+    "username": "moderator",
+    "password": "$2a$10$6gg.O76h3attTwho/Ug4huky/9evITg0sb/qe3kNuFBjk7pomJVo6",
+    "role": "investigador",
+    "email": "investigador@example.com"
+  },
+  {
+    "username": "client",
+    "password": "$2a$10$FU8NlUxgdWYxluHmeOznxOzLxRXWsSYBKuPevfOsJvALwwRqj5gdm",
+    "role": "observador",
+    "email": "observador@example.com"
+  },
+  {
+    "username": "ola",
+    "password": "$2a$10$7ePTSIlYLpbu2IRNQInhxOobUAliuL1xlf0PxX64W422XJE6u43Eq",
+    "role": "investigador",
+    "email": "ola@example.com"
+  },
+  {
+    "username": "123",
+    "password": "$2a$10$/m57e9MomfgauwpEVHd3v.avC0vo5CeQ25pn8kKRdeSoQvD/pLrmm",
+    "role": "investigador",
+    "email": "ernesto@gmail.com",
+    "companyName": null
+  },
+  {
+    "username": "1235",
+    "password": "$2a$10$pcQXX9gLtyrwCyZXtvQpNeFjcDYFCvlC0RKMZjnsQkd4G1kc3w.ky",
+    "role": "empresa",
+    "email": "empresa@gmail.com",
+    "companyName": "empresa"
+  },
+  {
+    "username": "empresa",
+    "password": "$2a$10$O1LmEygQ4Af2n0h.VvHdJO5Q/kCvKF3UOoNX94kDSFD9dRLXQ0Hye",
+    "role": "empresa",
+    "email": "empresaa@gmail.com",
+    "companyName": "ola"
+  },
+  {
+    "username": "observ",
+    "password": "$2a$10$JMZz1Y6AEa0t10rAtVS0Y..V5y7h3HJBL7itaBKRCI14lyGKbmjie",
+    "role": "observador",
+    "email": "observadores@gmail.com",
+    "companyName": null
+  },
+  {
+    "username": "124",
+    "password": "$2a$10$bp2PnTswbcQpFIHlMKzBce.FbNEm7OpcS1EP.Q7tiEzFWYpFE5WDe",
+    "role": "investigador",
+    "email": "124@gmail.com",
+    "companyName": null
+  },
+  {
+    "username": "admin2",
+    "password": "$2a$10$d0C09yuoXrMvE41FQqraU.Hlnus9VgA5Bd2dPxsO1Dk.rBns2pwIW",
+    "role": "admin",
+    "email": "admin@gmail.com",
+    "companyName": null
+  },
+  {
+    "username": "emp",
+    "password": "$2a$10$HHCQ6T74d7VHZr5Wu4f.UOvdqMPpvauHjgbyC6.KXD8EvnBW5TPGC",
+    "role": "empresa",
+    "email": "1235@gmail.com",
+    "companyName": "Researchmen inc"
+  },
+  {
+    "username": "Ernesto",
+    "password": "$2a$10$fru9QjsVZbtyv7ha6UR.aeckWzkmaAu6eOSh3TNPodE49p80eiMmW",
+    "role": "observador",
+    "email": "ernestoo@gmail.com",
+    "companyName": null
+  },
+  {
+    "username": "Tito2",
+    "password": "$2a$10$59pBb0iW53cvqIs6L6xBhOVI8Nbcm/dvOUg120rEaul6pV2Gpa7cW",
+    "role": "admin",
+    "email": "ola@gmail.com",
+    "companyName": null
+  },
+  {
+    "username": "Ernestoo",
+    "password": "$2a$10$pOr9tIeLFpBpauoThWZwYu7AlGoRzBNFc9YYzx9KEWeQ1pq68D55e",
+    "role": "admin",
+    "email": "a@gmail.com",
+    "companyName": null
+  },
+  {
+    "username": "Ol",
+    "password": "$2a$10$QZHrxBLwnZ6sLcpGMNoqAes.15iLPwUSKeI/B6mKWu3jTMgtDXpyq",
+    "role": "empresa",
+    "email": "Empresa@gmail.com",
+    "companyName": "inc"
+  },
+  {
+    "username": "tiito",
+    "password": "$2a$10$esmVfUiE2sHSTgW2axydouERR8KknPbXQwY.SH2uqtB4gvL8l2TbK",
+    "role": "admin",
+    "email": "eee@gmail.com",
+    "companyName": null
+  }
+]

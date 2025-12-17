@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Visor de documento</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <h1>Visor</h1>
+    <div id="info"></div>
+    <div id="container"></div>
+
+    <script>
+      function getQueryParam(name){
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
+      const file = getQueryParam('file');
+      if(!file){ document.getElementById('info').textContent = 'Falta parámetro file'; }
+      else{
+        const url = '/files/' + encodeURIComponent(file);
+        document.getElementById('info').textContent = file;
+        const ext = (file.split('.').pop()||'').toLowerCase();
+        const container = document.getElementById('container');
+        // Load as blob so the browser will render inline instead of forcing download
+        (async function(){
+          try {
+            const res = await fetch(url, { credentials: 'same-origin' });
+            if (!res.ok){ container.textContent = 'No se pudo obtener el archivo'; return }
+            const blob = await res.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            if(ext === 'pdf'){
+              const iframe = document.createElement('iframe');
+              iframe.src = blobUrl;
+              iframe.style.width = '100%'; iframe.style.height = '80vh'; iframe.style.border = 'none';
+              container.appendChild(iframe);
+            } else {
+              const iframe = document.createElement('iframe');
+              iframe.src = blobUrl; iframe.style.width = '100%'; iframe.style.height = '60vh'; iframe.style.border = 'none';
+              container.appendChild(iframe);
+              const a = document.createElement('a'); a.href = url; a.textContent = 'Abrir archivo en nueva pestaña'; a.target = '_blank';
+              container.appendChild(a);
+            }
+          } catch(e){ container.textContent = 'Error al cargar el archivo'; }
+        })();
+      }
+    </script>
+  </body>
+</html>

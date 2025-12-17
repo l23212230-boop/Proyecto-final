@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Divulgación Científica - Subir documentos</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header id="header">
+      <!-- navbar will be loaded dynamically -->
+      <div id="navbarContainer"></div>
+    </header>
+
+  <section>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>Subir archivo</h2>
+        <div id="authArea" class="small"></div>
+      </div>
+      <form id="uploadForm" style="display:none" enctype="multipart/form-data">
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <input type="file" name="file" id="fileInput" required />
+          <input id="categoryInput" name="category" placeholder="Categoría (ej. Física, Biología)" style="width:220px" />
+          <button class="btn" type="submit">Subir</button>
+        </div>
+      </form>
+      <div id="uploadMsg" class="small"></div>
+        <div id="codesPanel" class="small" style="margin-top:.5rem"></div>
+    </section>
+
+    <!-- Public landing shown only to anonymous users -->
+    <div id="publicLanding" class="card" style="display:none;text-align:center;margin-top:2rem">
+      <h2>Acceso requerido</h2>
+      <p class="small">Debes iniciar sesión o registrarte para ver el contenido.</p>
+      <div style="display:flex;justify-content:center;gap:1rem;margin-top:1rem">
+        <a class="btn" href="/login.html">Iniciar sesión</a>
+        <a class="btn secondary" href="/register.html">Registrarse</a>
+      </div>
+    </div>
+
+    <section class="file-list">
+      <h2>Documentos</h2>
+      <div id="files"></div>
+    </section>
+
+    <section id="viewerSection" style="display:none">
+      <h2>Visor</h2>
+      <div id="viewerInfo" class="small"></div>
+      <div id="viewerContainer"></div>
+    </section>
+
+    <script>
+      // Helpers
+      function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
+
+      // Viewer: load file as blob and embed in iframe to avoid forced downloads
+      let __lastViewerBlobUrl = null;
+      async function openViewer(file){
+        const viewerSection = document.getElementById('viewerSection');
+        const viewerContainer = document.getElementById('viewerContainer');
+        const viewerInfo = document.getElementById('viewerInfo');
+        viewerSection.style.display = 'block';
+        viewerInfo.textContent = file.originalName;
+        if(__lastViewerBlobUrl){ try { URL.revokeObjectURL(__lastViewerBlobUrl); } catch(e){} __lastViewerBlobUrl = null; }
+        viewerContainer.innerHTML = '';
+        if(!file.filename){ viewerContainer.textContent = 'No hay archivo para mostrar.'; return; }
+        const url = '/files/' + encodeURIComponent(file.filename);
+        try {
+          const res = await fetch(url, { credentials: 'same-origin' });
+          if (!res.ok){ const txt = await res.text().catch(()=>null); viewerContainer.textContent = `Error al obtener el archivo: ${res.status} ${txt||''}`; return }
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          __lastViewerBlobUrl = blobUrl;
+          const ext = (file.originalName.split('.').pop() || '').toLowerCase();
+          const iframe = document.createElement('iframe');
+          iframe.src = blobUrl;
+          iframe.style.width = '100%'; iframe.style.border = 'none';
+          iframe.style.height = (ext === 'pdf') ? '80vh' : '60vh';
+          viewerContainer.appendChild(iframe);
+          if(ext !== 'pdf'){
+            const p = document.createElement('p');
+            p.innerHTML = `Si el archivo no se muestra, <a href="/files/${encodeURIComponent(file.filename)}" target="_blank">ábrelo en una nueva pestaña</a>.`;
+            viewerContainer.appendChild(p);
+          }
+        } catch (err) { viewerContainer.textContent = 'Error al cargar el archivo.'; }
+      }
+
+      // Live search: cache files and render
+      let allFiles = [];
+      function renderFiles(list){
+        const container = document.getElementById('files');
+        container.innerHTML = '';
+        if(!list || list.length === 0){ container.innerHTML = '<div class="small">No hay archivos.</div>'; return }
+        list.forEach(f => {
+          const div = document.createElement('div');
+          div.className = 'file-item';
+          const left = document.createElement('div');
+          let metaHtml = `<strong>${escapeHtml(f.originalName)}</strong><div class="meta">${escapeHtml(f.uploader)} · ${escapeHtml(new Date(f.uploadedAt).toLocaleString())}</div>`;
+          if(f.category) metaHtml += `<div class="small">Categoría: ${escapeHtml(f.category)}</div>`;
+          if(f.uploaderEmail) metaHtml += `<div class="small">${escapeHtml(f.uploaderEmail)}</div>`;
+          if(f.filename) metaHtml += `<div class="small">${escapeHtml(f.filename)}</div>`;
+          left.innerHTML = metaHtml;
+          const right = document.createElement('div');
+          const viewBtn = document.createElement('button');
+          viewBtn.className = 'btn'; viewBtn.textContent = 'Ver';
+          if(f.filename) viewBtn.onclick = () => openViewer(f); else viewBtn.disabled = true;
+          right.appendChild(viewBtn);
+          if(f.filename){
+            const download = document.createElement('a');
+            download.href = '/files/' + encodeURIComponent(f.filename);
+            download.textContent = 'Descargar'; download.className = 'link'; download.style.marginLeft = '10px';
+            right.appendChild(download);
+          }
+          if (currentUser && currentUser.role === 'admin'){
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn secondary'; delBtn.textContent = 'Borrar'; delBtn.style.marginLeft = '10px';
+            delBtn.onclick = () => deleteFile(f.filename, f);
+            right.appendChild(delBtn);
+          }
+          div.appendChild(left); div.appendChild(right); container.appendChild(div);
+        });
+      }
+
+      async function loadFiles(){
+        const res = await fetch('/files'); allFiles = await res.json(); renderFiles(allFiles);
+      }
+
+      // Auth & load
+      let currentUser = null;
+      async function authAndLoad(){
+        const r = await fetch('/me'); const j = await r.json(); currentUser = j.user;
+        const authArea = document.getElementById('authArea'); const uploadForm = document.getElementById('uploadForm');
+        const navAuthArea = document.getElementById('navAuthArea');
+        if(currentUser){
+          document.getElementById('publicLanding').style.display = 'none';
+          document.querySelectorAll('header, section, .file-list, #viewerSection').forEach(el => el.style.display = 'block');
+          let authHtml = `Conectado como <strong>${escapeHtml(currentUser.username)}</strong> (${escapeHtml(currentUser.role)}) <a class="link" href="#" id="logoutLink">Salir</a>`;
+          if(currentUser.role === 'admin') authHtml += ` <button id="showCodesBtn" class="btn secondary" style="margin-left:8px">Mostrar códigos</button>`;
+          authArea.innerHTML = authHtml; if(navAuthArea) navAuthArea.innerHTML = authHtml;
+          if(currentUser.role === 'admin') document.getElementById('showCodesBtn').addEventListener('click', async (e) => { e.preventDefault(); await fetchAndShowCodes(); });
+          document.getElementById('logoutLink').addEventListener('click', async (e) => { e.preventDefault(); await fetch('/logout',{method:'POST'}); window.location.reload(); });
+          uploadForm.style.display = (currentUser.role === 'admin' || currentUser.role === 'investigador') ? 'flex' : 'none';
+        } else {
+          document.querySelectorAll('header, section, .file-list, #viewerSection').forEach(el => el.style.display = 'none');
+          document.getElementById('publicLanding').style.display = 'block'; authArea.innerHTML = ''; if(navAuthArea) navAuthArea.innerHTML = '';
+        }
+        await loadFiles();
+      }
+
+      async function deleteFile(filename, meta){ if(!currentUser) return alert('Inicia sesión'); if(currentUser.role !== 'admin') return alert('Solo administradores pueden borrar archivos'); if(!confirm('¿Borrar este archivo?')) return; const res = await fetch('/files/' + encodeURIComponent(filename), { method: 'DELETE' }); if(res.ok) { loadFiles(); } else { const j = await res.json(); alert(j.error || 'Error'); } }
+
+      // Handle upload form
+      document.getElementById('uploadForm').addEventListener('submit', async function(e){
+        e.preventDefault();
+        const msg = document.getElementById('uploadMsg');
+        const fileInput = document.getElementById('fileInput');
+        const categoryInput = document.getElementById('categoryInput');
+        if(!fileInput.files.length) return;
+        msg.textContent = 'Subiendo...';
+        const fd = new FormData(); fd.append('file', fileInput.files[0]);
+        if(categoryInput && categoryInput.value.trim()) fd.append('category', categoryInput.value.trim());
+        const res = await fetch('/upload', { method: 'POST', body: fd });
+        const j = await res.json();
+        if(res.ok){ msg.textContent = 'Subido'; fileInput.value = ''; if(categoryInput) categoryInput.value = ''; loadFiles(); }
+        else { msg.textContent = j.error || 'Error'; }
+      });
+
+      // Load navbar and wire search
+      (async function(){
+        try{
+          const navHtml = await (await fetch('/navbar.html')).text();
+          document.getElementById('navbarContainer').innerHTML = navHtml;
+          // wire search
+          const searchInput = document.getElementById('searchInput');
+          if(searchInput){
+            searchInput.addEventListener('input', (e) => {
+              const q = (e.target.value||'').trim().toLowerCase();
+              if(!q) return renderFiles(allFiles);
+              const filtered = allFiles.filter(f => {
+                return (f.originalName||'').toLowerCase().includes(q) || (f.uploader||'').toLowerCase().includes(q) || (f.filename||'').toLowerCase().includes(q) || (f.category||'').toLowerCase().includes(q);
+              });
+              renderFiles(filtered);
+            });
+          }
+        }catch(e){ /* ignore */ }
+      })();
+
+      authAndLoad();
+
+      async function fetchAndShowCodes(){ const panel = document.getElementById('codesPanel'); panel.textContent = 'Cargando códigos...'; try { const res = await fetch('/codes'); if(!res.ok){ const j = await res.json(); panel.textContent = j.error || 'Error'; return } const j = await res.json(); const codes = j.codes || {}; panel.innerHTML = `<strong>Códigos de registro</strong>\n            <div class="small">Admin: <code>${escapeHtml(codes.admin)}</code></div>\n            <div class="small">Investigador: <code>${escapeHtml(codes.investigador)}</code></div>\n            <div class="small">Observador: <code>${escapeHtml(codes.observador)}</code></div>\n            <div class="small">Empresa: <code>${escapeHtml(codes.empresa)}</code></div>`; } catch (err){ panel.textContent = 'Error al obtener códigos'; } }
+    </script>
+  </body>
+</html>

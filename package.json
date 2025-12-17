@@ -1,0 +1,17 @@
+{
+  "name": "divulgacion-cientifica",
+  "version": "1.0.0",
+  "description": "Página sencilla para subir y mostrar documentos científicos",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.4",
+    "express-session": "^1.17.3",
+    "bcryptjs": "^2.4.3"
+  }
+}

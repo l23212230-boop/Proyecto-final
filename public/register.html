@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Registrarse</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main>
+      <h1>Crear cuenta</h1>
+      <p class="small">Introduce un código de registro que te ha proporcionado el administrador.</p>
+  <div id="publicCodes" class="small" style="margin-bottom:.5rem"></div>
+      <form id="regForm">
+        <label for="username">Usuario</label><br>
+        <input id="username" name="username" required />
+        <br>
+        <label for="email">Correo electrónico</label><br>
+        <input id="email" name="email" type="email" required />
+        <br>
+        <label for="password">Contraseña</label><br>
+        <input id="password" name="password" type="password" required />
+        <br>
+        <label for="code">Código de registro</label><br>
+        <input id="code" name="code" required />
+        <br>
+        <div id="companyField" style="display:none">
+          <label for="companyName">Nombre de la empresa</label><br>
+          <input id="companyName" name="companyName" />
+          <br>
+        </div>
+        <button class="btn" type="submit">Registrarme</button>
+      </form>
+      <div id="msg" class="small"></div>
+      <script>
+        // Fetch and show public registration codes (non-admin) and show/hide company field
+        let PUBLIC_CODES = {};
+        async function showPublicCodes(){
+          const panel = document.getElementById('publicCodes');
+          panel.textContent = 'Cargando códigos...';
+          try {
+            const res = await fetch('/public-codes');
+            if(!res.ok){ panel.textContent = 'No se pudieron obtener códigos'; return }
+            const j = await res.json();
+            const codes = j.codes || {};
+            PUBLIC_CODES = codes;
+            panel.innerHTML = `<strong>Códigos para registrarse</strong>
+              <div class="small">Admin: <code>${codes.admin || ''}</code></div>
+              <div class="small">Investigador: <code>${codes.investigador || ''}</code></div>
+              <div class="small">Observador: <code>${codes.observador || ''}</code></div>
+              <div class="small">Empresa: <code>${codes.empresa || ''}</code></div>`;
+          } catch (err){ panel.textContent = 'Error al obtener códigos'; }
+        }
+        showPublicCodes();
+
+        // Show company field when user types the empresa code
+        document.addEventListener('input', (e) => {
+          if (e.target && e.target.id === 'code'){
+            const v = e.target.value.trim();
+            const companyField = document.getElementById('companyField');
+            if (PUBLIC_CODES && v === PUBLIC_CODES.empresa) companyField.style.display = 'block';
+            else companyField.style.display = 'none';
+          }
+        });
+      </script>
+      <p class="small">¿Ya tienes cuenta? <a class="link" href="/login.html">Inicia sesión</a></p>
+    </main>
+    <script>
+      document.getElementById('regForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const code = document.getElementById('code').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const companyName = document.getElementById('companyName').value.trim();
+        const msg = document.getElementById('msg');
+        msg.textContent = 'Registrando...';
+        try {
+          const body = { username, password, code, email };
+          if (code === (PUBLIC_CODES && PUBLIC_CODES.empresa)) body.companyName = companyName;
+          const res = await fetch('/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+          const j = await res.json();
+          if (res.ok) {
+            window.location = '/';
+          } else {
+            msg.textContent = j.error || 'Error';
+          }
+        } catch (err) { msg.textContent = 'Error de red'; }
+      });
+    </script>
+  </body>
+</html>
